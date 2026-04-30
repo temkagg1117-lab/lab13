@@ -1,84 +1,28 @@
-Task CRUD
+Task CRUD - Үүсгэх, унших, засах, устгах
 
-Үүсгэх, унших, засах, устгах
+Due date - Гүйцэтгэх хугацаа тохируулах, хугацаа дууссан эсэхийг харах
 
-✓ оруулна
-Due date
+Priority - Low / Medium / High — гурван түвшин
 
-Гүйцэтгэх хугацаа тохируулах, хугацаа дууссан эсэхийг харах
+Labels / Tags - Нэг task-д олон label, шинэ label үүсгэх
 
-✓ оруулна
-Priority
+Search & Filter - Нэрээр хайх, priority/label/status-аар шүүх
 
-Low / Medium / High — гурван түвшин
+Status - Todo / In Progress / Done — дууссан гэж тэмдэглэх
 
-✓ оруулна
-Labels / Tags
-
-Нэг task-д олон label, шинэ label үүсгэх
-
-✓ оруулна
-Search & Filter
-
-Нэрээр хайх, priority/label/status-аар шүүх
-
-✓ оруулна
-Status
-
-Todo / In Progress / Done — дууссан гэж тэмдэглэх
-
-дам оруулна
 
 Minimal viable features — 5 онцлог
 
-1
-Task CRUD
+1 Task CRUD
 Нэмэх, засах, устгах, гүйцэтгэсэн гэж тэмдэглэх
-2
-Due date + хугацаа дууссан анхааруулга
+2 Due date + хугацаа дууссан анхааруулга
 Өнгөний дохиогоор хугацаа ойртсон, хэтэрсэн task ялгах
-3
-Priority шошго (Low / Medium / High)
+3 Priority шошго (Low / Medium / High)
 Task жагсаалтад өнгө эсвэл icon-оор харуулах
-4
-Labels / Tags
+4 Labels / Tags
 Хэд хэдэн label нэмэх, label-аар шүүх
-5
-Search & Filter
+5 Search & Filter
 Нэрээр хайх + priority, label, status-аар нэгэн зэрэг шүүх
-
-Non-goals — юуг хасах вэ
-
-Хамтын ажиллагаа
-
-Олон хэрэглэгч, хандах эрх, коммент, дурдах (@mention)
-
-✗ хасна
-Мэдэгдэл / Push
-
-Цахим шуудан, SMS, push notification илгээх
-
-✗ хасна
-Calendar sync
-
-Google Calendar, Outlook, iCal-тай холбох
-
-✗ хасна
-Файл хавсаргах
-
-Зураг, баримт бичиг хавсаргах, хадгалах
-
-✗ хасна
-Давтагдах task
-
-Өдөр бүр / долоо хоног бүр давтагдах тохиргоо
-
-✗ хасна
-Analytics / Report
-
-Гүйцэтгэлийн статистик, диаграмм, бүтээмжийн тайлан
-
-✗ хасна
 
 Товчхондоо:
 Хамрах хүрээ нь нэг хэрэглэгчийн хувийн task tracker — task нэмэх, засах, устгах, хугацаа болон priority тохируулах, label хавсаргах, хайх, шүүх. Энэ нь browser дотор ажиллах, backend шаардахгүй хялбар апп.

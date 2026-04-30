@@ -1,0 +1,3 @@
+Spring Boot + PostgreSQL нь энэ төсөлд хэт хүнд. Java boilerplate, JVM тохиргоо, Hibernate ORM — бүгд нь "task нэмэх, устгах" апп-д шаардлагагүй нэмэлт ажил. Энэ stack нь олон баг, олон сервис, нарийн transaction шаардлагатай enterprise орчинд утга учиртай.
+Node.js + Express + MongoDB нь дунд зэрэг сонголт — ecosystem нь хамгийн том, npm дээр хэрэгтэй бүх зүйл бий. Гэхдээ task tracker шиг бүтэцтэй өгөгдөлд MongoDB-ийн schema-less мөн чанар тус болохгүй, бас хэрэггүй нэмэлт complexity нэмнэ.
+FastAPI + SQLite нь энэ хэрэглээнд яг тааруулж хийсэн мэт тохирно. pip install fastapi uvicorn sqlmodel гэхэд л бараг бэлэн. SQLite нь нэг .db файл тул deploy ч хялбар. Хэрвээ хожим хэрэглэгч нэмэгдвэл SQLite-г PostgreSQL-рүү шилжүүлэхэд ихэнх код өөрчлөгдөхгүй.
