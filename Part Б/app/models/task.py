@@ -1,5 +1,3 @@
-# app/models/task.py
-
 from datetime import date
 from enum import Enum as PyEnum
 
@@ -26,8 +24,6 @@ class Priority(str, PyEnum):
     medium = "medium"
     high = "high"
 
-
-# Many-to-many association table — tasks ↔ labels
 task_labels = Table(
     "task_labels",
     Base.metadata,
