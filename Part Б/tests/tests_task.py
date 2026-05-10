@@ -160,3 +160,112 @@ def complete_task(task_id: int, db: Session = Depends(get_db)): return svc_compl
  
 app = FastAPI()
 app.include_router(router)
+
+import tempfile, os
+ 
+@pytest.fixture(scope="function")
+def db_session() -> Generator:
+    """Fresh SQLite file per test — full isolation."""
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    engine = create_engine(f"sqlite:///{path}", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    db = Session()
+    try:
+        yield db
+    finally:
+        db.close()
+        Base.metadata.drop_all(engine)
+        os.unlink(path)
+ 
+@pytest.fixture(scope="function")
+def client(db_session) -> Generator:
+    """TestClient wired to isolated test DB."""
+    def override():
+        yield db_session
+    app.dependency_overrides[get_db] = override
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+ 
+@pytest.fixture
+def future_date() -> str:
+    return (date.today() + timedelta(days=7)).isoformat()
+ 
+@pytest.fixture
+def past_date() -> str:
+    return (date.today() - timedelta(days=1)).isoformat()
+ 
+@pytest.fixture
+def task(client, future_date) -> dict:
+    """A single pre-created task for tests that need an existing record."""
+    r = client.post("/tasks/", json={"title": "Default task", "priority": "medium", "due_date": future_date})
+    assert r.status_code == 201
+    return r.json()
+ 
+ 
+# ── CRUD Tests ────────────────────────────────────────────────────────────────
+ 
+class TestCreateTask:
+    def test_create_task_success(self, client, future_date):
+        """TC-01: Valid payload returns 201 with all fields."""
+        r = client.post("/tasks/", json={
+            "title": "Buy groceries",
+            "description": "Milk and eggs",
+            "priority": "high",
+            "due_date": future_date,
+        })
+        assert r.status_code == 201
+        body = r.json()
+        assert body["title"] == "Buy groceries"
+        assert body["priority"] == "high"
+        assert body["completed"] is False
+        assert body["id"] is not None
+ 
+    def test_create_task_missing_title(self, client):
+        """TC-02: Missing title returns 422."""
+        r = client.post("/tasks/", json={"priority": "low"})
+        assert r.status_code == 422
+ 
+    def test_create_task_blank_title(self, client):
+        """TC-03: Whitespace-only title returns 422."""
+        r = client.post("/tasks/", json={"title": "   "})
+        assert r.status_code == 422
+ 
+    def test_create_task_defaults(self, client):
+        """TC-04: Omitted optional fields use correct defaults."""
+        r = client.post("/tasks/", json={"title": "Minimal task"})
+        assert r.status_code == 201
+        body = r.json()
+        assert body["priority"] == "medium"
+        assert body["completed"] is False
+        assert body["due_date"] is None
+        assert body["labels"] == []
+ 
+ 
+class TestGetTask:
+    def test_get_tasks_empty(self, client):
+        """TC-05: Empty DB returns empty list."""
+        r = client.get("/tasks/")
+        assert r.status_code == 200
+        assert r.json() == []
+ 
+    def test_get_tasks_returns_all(self, client, future_date):
+        """TC-06: All created tasks appear in list."""
+        client.post("/tasks/", json={"title": "Task A"})
+        client.post("/tasks/", json={"title": "Task B"})
+        r = client.get("/tasks/")
+        assert r.status_code == 200
+        assert len(r.json()) == 2
+ 
+    def test_get_task_by_id(self, client, task):
+        """TC-07: Existing task is returned correctly by ID."""
+        r = client.get(f"/tasks/{task['id']}")
+        assert r.status_code == 200
+        assert r.json()["id"] == task["id"]
+ 
+    def test_get_task_not_found(self, client):
+        """TC-08: Non-existent ID returns 404."""
+        r = client.get("/tasks/99999")
+        assert r.status_code == 404
