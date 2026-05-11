@@ -403,4 +403,20 @@ class TestSearchAndFilter:
         results = r.json()
         assert len(results) == 1
         assert results[0]["title"] == "Report"
+
+class TestPagination:
+    def test_limit_parameter(self, client):
+        """TC-29: ?limit=2 returns at most 2 tasks."""
+        for i in range(5):
+            client.post("/tasks/", json={"title": f"Task {i}"})
+        r = client.get("/tasks/?limit=2")
+        assert r.status_code == 200
+        assert len(r.json()) == 2
  
+    def test_skip_parameter(self, client):
+        """TC-30: ?skip=3 skips the first 3 tasks."""
+        for i in range(5):
+            client.post("/tasks/", json={"title": f"Task {i}"})
+        r_all = client.get("/tasks/")
+        r_skip = client.get("/tasks/?skip=3")
+        assert len(r_skip.json()) == len(r_all.json()) - 3
