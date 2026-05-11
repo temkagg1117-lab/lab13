@@ -269,3 +269,74 @@ class TestGetTask:
         """TC-08: Non-existent ID returns 404."""
         r = client.get("/tasks/99999")
         assert r.status_code == 404
+     
+class TestUpdateTask:
+    def test_update_task_title(self, client, task):
+        """TC-09: PATCH title updates only that field."""
+        r = client.patch(f"/tasks/{task['id']}", json={"title": "Updated title"})
+        assert r.status_code == 200
+        assert r.json()["title"] == "Updated title"
+        assert r.json()["priority"] == task["priority"]  
+ 
+    def test_update_task_not_found(self, client):
+        """TC-10: PATCH on non-existent task returns 404."""
+        r = client.patch("/tasks/99999", json={"title": "Ghost"})
+        assert r.status_code == 404
+ 
+    def test_update_task_empty_body(self, client, task):
+        """TC-11: PATCH with no fields returns 400."""
+        r = client.patch(f"/tasks/{task['id']}", json={})
+        assert r.status_code == 400
+ 
+    def test_update_task_priority(self, client, task):
+        """TC-12: Priority can be changed via PATCH."""
+        r = client.patch(f"/tasks/{task['id']}", json={"priority": "low"})
+        assert r.status_code == 200
+        assert r.json()["priority"] == "low"
+ 
+ 
+class TestDeleteTask:
+    def test_delete_task_success(self, client, task):
+        """TC-13: DELETE returns 204 and task is gone."""
+        r = client.delete(f"/tasks/{task['id']}")
+        assert r.status_code == 204
+        r2 = client.get(f"/tasks/{task['id']}")
+        assert r2.status_code == 404
+ 
+    def test_delete_task_not_found(self, client):
+        """TC-14: DELETE non-existent task returns 404."""
+        r = client.delete("/tasks/99999")
+        assert r.status_code == 404
+ 
+    def test_delete_task_idempotency(self, client, task):
+        """TC-15: Deleting same task twice — second call returns 404."""
+        client.delete(f"/tasks/{task['id']}")
+        r = client.delete(f"/tasks/{task['id']}")
+        assert r.status_code == 404
+ 
+class TestValidation:
+    def test_invalid_due_date_in_past(self, client, past_date):
+        """TC-16: Past due_date returns 422."""
+        r = client.post("/tasks/", json={"title": "Late task", "due_date": past_date})
+        assert r.status_code == 422
+ 
+    def test_invalid_due_date_format(self, client):
+        """TC-17: Malformed date string returns 422."""
+        r = client.post("/tasks/", json={"title": "Bad date", "due_date": "not-a-date"})
+        assert r.status_code == 422
+ 
+    def test_invalid_priority_value(self, client):
+        """TC-18: Unknown priority string returns 422."""
+        r = client.post("/tasks/", json={"title": "Task", "priority": "urgent"})
+        assert r.status_code == 422
+ 
+    def test_title_too_long(self, client):
+        """TC-19: Title exceeding 255 chars returns 422."""
+        r = client.post("/tasks/", json={"title": "x" * 256})
+        assert r.status_code == 422
+ 
+    def test_complete_task_marks_done(self, client, task):
+        """TC-20: POST /complete sets completed=True."""
+        r = client.post(f"/tasks/{task['id']}/complete")
+        assert r.status_code == 200
+        assert r.json()["completed"] is True
