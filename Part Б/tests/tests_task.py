@@ -340,3 +340,67 @@ class TestValidation:
         r = client.post(f"/tasks/{task['id']}/complete")
         assert r.status_code == 200
         assert r.json()["completed"] is True
+class TestSearchAndFilter:
+    def test_search_by_keyword_match(self, client):
+        """TC-21: ?q= returns tasks whose title contains the keyword."""
+        client.post("/tasks/", json={"title": "Buy groceries"})
+        client.post("/tasks/", json={"title": "Call doctor"})
+        r = client.get("/tasks/?q=groceries")
+        assert r.status_code == 200
+        titles = [t["title"] for t in r.json()]
+        assert "Buy groceries" in titles
+        assert "Call doctor" not in titles
+ 
+    def test_search_by_keyword_no_match(self, client):
+        """TC-22: ?q= with no matching tasks returns empty list."""
+        client.post("/tasks/", json={"title": "Buy groceries"})
+        r = client.get("/tasks/?q=zzznomatch")
+        assert r.status_code == 200
+        assert r.json() == []
+ 
+    def test_search_case_insensitive(self, client):
+        """TC-23: Keyword search is case-insensitive."""
+        client.post("/tasks/", json={"title": "Buy Groceries"})
+        r = client.get("/tasks/?q=groceries")
+        assert len(r.json()) == 1
+ 
+    def test_filter_by_priority_high(self, client, future_date):
+        """TC-24: ?priority=high returns only high-priority tasks."""
+        client.post("/tasks/", json={"title": "High task", "priority": "high", "due_date": future_date})
+        client.post("/tasks/", json={"title": "Low task", "priority": "low"})
+        r = client.get("/tasks/?priority=high")
+        assert r.status_code == 200
+        assert all(t["priority"] == "high" for t in r.json())
+        assert len(r.json()) == 1
+ 
+    def test_filter_by_priority_invalid(self, client):
+        """TC-25: ?priority=urgent returns 422."""
+        r = client.get("/tasks/?priority=urgent")
+        assert r.status_code == 422
+ 
+    def test_filter_completed_false(self, client, task):
+        """TC-26: ?completed=false excludes completed tasks."""
+        client.post(f"/tasks/{task['id']}/complete")
+        r = client.get("/tasks/?completed=false")
+        ids = [t["id"] for t in r.json()]
+        assert task["id"] not in ids
+ 
+    def test_filter_completed_true(self, client, task):
+        """TC-27: ?completed=true returns only completed tasks."""
+        client.post(f"/tasks/{task['id']}/complete")
+        r = client.get("/tasks/?completed=true")
+        assert r.status_code == 200
+        assert all(t["completed"] is True for t in r.json())
+        assert any(t["id"] == task["id"] for t in r.json())
+ 
+    def test_filter_combined(self, client, future_date):
+        """TC-28: Multiple filters applied together narrow results correctly."""
+        client.post("/tasks/", json={"title": "Report", "priority": "high", "due_date": future_date})
+        client.post("/tasks/", json={"title": "Report draft", "priority": "low"})
+        client.post("/tasks/", json={"title": "Unrelated", "priority": "high", "due_date": future_date})
+        r = client.get("/tasks/?q=report&priority=high")
+        assert r.status_code == 200
+        results = r.json()
+        assert len(results) == 1
+        assert results[0]["title"] == "Report"
+ 
